@@ -27,6 +27,7 @@ def get_local_time(lat, long):
 
 def get_ozone_data(lat, long): 
 
+    # Check whether ozone data file already exists
     if not exists('./data/ozone_data.txt'):
         # Extract all links on the url webpage. This page contains links to text files containing global ozone data
         url = "https://ozonewatch.gsfc.nasa.gov/data/omps/Y2022/"
