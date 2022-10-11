@@ -6,27 +6,8 @@ from os.path import exists
 import requests
 import pytz
 
-def get_local_time(lat, long):
-    """
-    Returns the current local time for a given location.
-    """
-
-    # find timezone name
-    timezone_str = tzwhere.tzwhere().tzNameAt(lat, long)
-
-    # find time difference of timezone compare to UTC
-    timezone = pytz.timezone(timezone_str)
-
-    utc_offset = timezone.utcoffset(datetime.utcnow())
-
-    # subtract time difference from UTC
-    local_time = datetime.utcnow() + timedelta(days = utc_offset.days,
-                                               seconds = utc_offset.seconds) 
-
-    return(local_time)
-
 def get_ozone_data(lat, long): 
-
+    
     # Check whether ozone data file already exists
     if not exists('./data/ozone_data.txt'):
         # Extract all links on the url webpage. This page contains links to text files containing global ozone data
@@ -34,8 +15,11 @@ def get_ozone_data(lat, long):
         reqs = requests.get(url)
         links = BeautifulSoup(reqs.text, 'html.parser')
 
+        # Get current utc time
+        date = datetime.utcnow()
+        
         # Find current datetime at given latitude and longitude
-        date = get_local_time(lat, long)
+        # date = get_local_time(lat, long)
 
         # Combine year, month and day into a format that we expect to be in the relevant text file link
         date_suffix = '{:04d}'.format(date.year) + 'm' + '{:02d}'.format(date.month) + '{:02d}'.format(date.day - 1)
