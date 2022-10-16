@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import pandas as pd
 import pytz
@@ -52,8 +53,9 @@ def get_ozone_data(end_filepath):
 
 
 def clean_ozone_data(filepath):
+    
     # Read in ozone data
-    df_ozone = pd.read_csv("./data/ozone_data.txt", skiprows=3, names = ["raw_values"])
+    df_ozone = pd.read_csv(filepath, skiprows=3, names = ["raw_values"])
     
     # Create a dataframe containing our latitude and longitude intervals
     df_out = pd.DataFrame({'Latitude': np.repeat(np.linspace(-89.5, 89.5, 180), 360),
@@ -76,3 +78,10 @@ def clean_ozone_data(filepath):
     df_out['ozone_dobson_value'] = flatten_list
     
     return(df_out)
+
+def get_ozone_thickness(df_ozone, lat, long):
+    lat_rounded = math.floor(lat) + 0.5
+    long_rounded = math.floor(long) + 0.5
+    
+    return(int(df_ozone.loc[(df_ozone['Latitude'] == lat_rounded) & (df_ozone['Longitude'] == long_rounded)]['ozone_dobson_value']))
+
