@@ -9,24 +9,6 @@ from bs4 import BeautifulSoup
 from tzwhere import tzwhere
 from os.path import exists
 
-def get_local_time(lat, long):
-    """
-    Returns the current local time for a given location.
-    """
-
-    # find timezone name
-    timezone_str = tzwhere.tzwhere().tzNameAt(lat, long)
-
-    # find time difference of timezone compare to UTC
-    timezone = pytz.timezone(timezone_str)
-
-    utc_offset = timezone.utcoffset(datetime.utcnow())
-
-    # subtract time difference from UTC
-    local_time = datetime.utcnow() + timedelta(days = utc_offset.days,
-                                               seconds = utc_offset.seconds) 
-
-    return(local_time)
 
 def get_ozone_data(end_filepath): 
 
@@ -78,6 +60,7 @@ def clean_ozone_data(filepath):
     df_out['ozone_dobson_value'] = flatten_list
     
     return(df_out)
+
 
 def get_ozone_thickness(df_ozone, lat, long):
     lat_rounded = math.floor(lat) + 0.5
