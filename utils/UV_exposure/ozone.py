@@ -11,7 +11,7 @@ from os.path import exists
 
 
 def get_ozone_data(end_filepath): 
-
+    
     # Check whether ozone data file already exists
     if not exists('./data/ozone_data.txt'):
         # Extract all links on the url webpage. This page contains links to text files containing global ozone data
