@@ -20,7 +20,7 @@ def metric_ang_decl():
     return(-23.45 * math.cos(math.radians((360 / 365) * (day + 10))))
 
 
-def elevation_angle(lat, long):
+def zenith_angle(lat, long):
     
     def get_local_time(lat, long):
         """
@@ -89,4 +89,4 @@ def elevation_angle(lat, long):
     # convert elevation angle from radians to degrees
     elevation_angle = elevation_angle * 180 / math.pi
 
-    return(elevation_angle)
+    return(90 - elevation_angle)
