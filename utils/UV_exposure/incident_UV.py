@@ -5,42 +5,41 @@ import math
 import pytz
 
 
-def metric_ang_decl():
+def get_local_time(lat, long):
     """
-    Returns the declination angle of the Earth in degrees.
-    
-    Parameters:
-        day (int): the day of the year
-        
-    Returns:
-        ang_decl (float): the angle of declination of the Earth in degrees
+    Returns the current local time for a given location.
     """
-    
-    day = datetime.utcnow().timetuple().tm_yday
-    return(-23.45 * math.cos(math.radians((360 / 365) * (day + 10))))
 
+    # find timezone name
+    timezone_str = tzwhere.tzwhere().tzNameAt(lat, long)
+
+    # find time difference of timezone compare to UTC
+    timezone = pytz.timezone(timezone_str)
+
+    utc_offset = timezone.utcoffset(datetime.utcnow())
+
+    # subtract time difference from UTC
+    local_time = datetime.utcnow() + timedelta(days = utc_offset.days,
+                                               seconds = utc_offset.seconds) 
+
+    return(local_time)
 
 def zenith_angle(lat, long):
     
-    def get_local_time(lat, long):
+    def metric_ang_decl():
         """
-        Returns the current local time for a given location.
+        Returns the declination angle of the Earth in degrees.
+
+        Parameters:
+            day (int): the day of the year
+
+        Returns:
+            ang_decl (float): the angle of declination of the Earth in degrees
         """
-        
-        # find timezone name
-        timezone_str = tzwhere.tzwhere().tzNameAt(lat, long)
 
-        # find time difference of timezone compare to UTC
-        timezone = pytz.timezone(timezone_str)
-
-        utc_offset = timezone.utcoffset(datetime.utcnow())
-
-        # subtract time difference from UTC
-        local_time = datetime.utcnow() + timedelta(days = utc_offset.days,
-                                                   seconds = utc_offset.seconds) 
-
-        return(local_time)
-
+        day = datetime.utcnow().timetuple().tm_yday
+        return(-23.45 * math.cos(math.radians((360 / 365) * (day + 10))))
+    
     
     def LSTM(lat, long):
         """

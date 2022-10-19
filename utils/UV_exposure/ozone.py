@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 from tzwhere import tzwhere
 from os.path import exists
+from .incident_UV import zenith_angle 
 
 
 def get_ozone_data(): 
@@ -84,3 +85,6 @@ def get_ozone_thickness(df_ozone, lat, long):
     
     return(int(df_ozone.loc[(df_ozone['Latitude'] == lat_rounded) & (df_ozone['Longitude'] == long_rounded)]['ozone_dobson_value']))
 
+
+def mu_x(zenith):
+    return()
