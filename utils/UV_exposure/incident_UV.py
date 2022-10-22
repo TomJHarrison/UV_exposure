@@ -90,11 +90,9 @@ def zenith_angle(lat, long):
 
     elevation_angle = math.asin(math.sin(math.radians(ang_decl)) * math.sin(math.radians(lat)) + math.cos(math.radians(ang_decl)) * math.cos(math.radians(lat)) * math.cos(math.radians(hour_angle(lat = lat, long = long))))
 
-    # convert elevation angle from radians to degrees
-    elevation_angle = elevation_angle * 180 / math.pi
-
     # convert from elevation angle to zenith angle
-    return(90 - elevation_angle)
+    zenith_angle = (math.pi / 2) - elevation_angle
+    return(zenith_angle)
 
 
 def mu_x(zenith_angle):
@@ -102,8 +100,7 @@ def mu_x(zenith_angle):
     A parameter of the UVI equation which depends on the solar zenith angle only
     """
     
-    zenith_rad = zenith_angle * math.pi / 180
-    return(math.cos(zenith_rad) * 0.83 + 0.17)
+    return(math.cos(zenith_angle) * 0.83 + 0.17)
 
 
 def earth_sun_dist(utc_day):
@@ -127,3 +124,17 @@ def UVA(utc_day, zenith):
     UVA = pow((1 / earth_sun_dist(utc_day)), 2) * 1.24 * mu * math.exp(- (0.58 / mu))
     return(UVA)
 
+def clear_sky_UVI(utc_day, zenith, tot_ozone):
+    """
+    Calculate current clear-sky UVI for a given location
+    """
+    
+    UVA_ = UVA(utc_day, zenith)
+    X = 1000 * math.cos(zenith) / tot_ozone
+    UVI = UVA_ * (2 * pow(X, 1.62)) + 280 / tot_ozone + 1.4
+    
+    if isinstance(UVI, complex) or UVI < 0:
+        UVI = 0
+        
+    return(UVI)
+    
