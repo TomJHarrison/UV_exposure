@@ -12,13 +12,13 @@ from os.path import exists
 from .incident_UV import zenith_angle 
 
 
-def get_ozone_data(): 
+def get_ozone_data(date): 
     
     if not os.path.exists("./data/"):
         os.makedirs("./data/")
     
     # Find current datetime for UTC
-    date = datetime.utcnow() - timedelta(days=1) 
+    # date = datetime.utcnow() - timedelta(days=1) 
     end_filepath = "./data/ozone_data_raw_" + str(date.year) + str(date.month) + str(date.day) + ".txt"
     
     # Check whether ozone data file already exists
@@ -29,7 +29,7 @@ def get_ozone_data():
         links = BeautifulSoup(reqs.text, 'html.parser')
 
         # Combine year, month and day into a format that we expect to be in the relevant text file link
-        date_suffix = '{:04d}'.format(date.year) + 'm' + '{:02d}'.format(date.month) + '{:02d}'.format(date.day - 1)
+        date_suffix = '{:04d}'.format(date.year) + 'm' + '{:02d}'.format(date.month) + '{:02d}'.format(date.day)
 
         # Find text file link
         txt_file_suffix = [link.get('href') for link in links.find_all('a') if date_suffix in link.get('href')]
@@ -40,10 +40,11 @@ def get_ozone_data():
         open(f'{end_filepath}', 'wb').write(r.content)
 
 
-def clean_ozone_data():
+def clean_ozone_data(date):
     
-    # Find current datetime for UTC
-    date = datetime.utcnow() - timedelta(days=1) 
+    # Find current datetime for UTC and subtract 1 day.
+    # We will retrieve the ozone data that was published yesterday.
+    # date = datetime.utcnow() - timedelta(days=1) 
     raw_filepath = "./data/ozone_data_raw_" + str(date.year) + str(date.month) + str(date.day) + ".txt"
     clean_filepath = "./data/ozone_data_clean_" + str(date.year) + str(date.month) + str(date.day) + ".txt"
     
@@ -84,7 +85,3 @@ def get_ozone_thickness(df_ozone, lat, long):
     long_rounded = math.floor(long) + 0.5
     
     return(int(df_ozone.loc[(df_ozone['Latitude'] == lat_rounded) & (df_ozone['Longitude'] == long_rounded)]['ozone_dobson_value']))
-
-
-def mu_x(zenith):
-    return()

@@ -1,17 +1,21 @@
-from datetime import datetime, timedelta
-from tzwhere import tzwhere
-
 import math
 import pytz
+import warnings
+
+from datetime import datetime, timedelta
+from tzwhere import tzwhere
 
 
 def get_local_time(lat, long):
     """
     Returns the current local time for a given location.
     """
-
+    
     # find timezone name
-    timezone_str = tzwhere.tzwhere().tzNameAt(lat, long)
+    # we expect a warning here which is generated from the tzwhere package - suppress it.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        timezone_str = tzwhere.tzwhere().tzNameAt(lat, long)
 
     # find time difference of timezone compare to UTC
     timezone = pytz.timezone(timezone_str)
@@ -23,6 +27,7 @@ def get_local_time(lat, long):
                                                seconds = utc_offset.seconds) 
 
     return(local_time)
+
 
 def zenith_angle(lat, long):
     
@@ -88,4 +93,37 @@ def zenith_angle(lat, long):
     # convert elevation angle from radians to degrees
     elevation_angle = elevation_angle * 180 / math.pi
 
+    # convert from elevation angle to zenith angle
     return(90 - elevation_angle)
+
+
+def mu_x(zenith_angle):
+    """
+    A parameter of the UVI equation which depends on the solar zenith angle only
+    """
+    
+    zenith_rad = zenith_angle * math.pi / 180
+    return(math.cos(zenith_rad) * 0.83 + 0.17)
+
+
+def earth_sun_dist(utc_day):
+    """
+    A measure of the current Earth-Sun distance in astronomical units.
+    1 AU is equal to the average distance between the Sun and the Earth.
+    """
+
+    return(1 - 0.01672 * math.cos(0.9856 * (utc_day - 4)))
+ 
+    
+def UVA(utc_day, zenith):
+    """
+    Calculate the current UVA value for a given location.
+    We don't have latitude and longitude because we want the zenith angle to be identical
+    for this equation and for UVI (see below). Having zentih as an argument avoids calculating the 
+    zenith angle twice and at two separate (albeit close) times.
+    """
+    mu = mu_x(zenith)
+    
+    UVA = pow((1 / earth_sun_dist(utc_day)), 2) * 1.24 * mu * math.exp(- (0.58 / mu))
+    return(UVA)
+
