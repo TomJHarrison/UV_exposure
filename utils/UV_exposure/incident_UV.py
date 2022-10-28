@@ -26,10 +26,10 @@ def get_local_time(lat, long):
     local_time = datetime.utcnow() + timedelta(days = utc_offset.days,
                                                seconds = utc_offset.seconds) 
 
-    return(local_time)
+    return(local_time) 
 
 
-def zenith_angle(lat, long):
+def zenith_angle(lat, long, time):
     
     def metric_ang_decl():
         """
@@ -46,36 +46,36 @@ def zenith_angle(lat, long):
         return(-23.45 * math.cos(math.radians((360 / 365) * (day + 10))))
     
     
-    def LSTM(lat, long):
+    def LSTM(lat, long, time):
         """
         Returns the Local Standard Time Meridian
         """
 
-        delta_utc =  local_time.hour - datetime.utcnow().hour
+        delta_utc =  time.hour - datetime.utcnow().hour
         
         return(15 * delta_utc)
 
 
-    def time_correct_fact(lat, long):
+    def time_correct_fact(lat, long, time):
         """
         Returns the time correction factor for a particular longitude
         """
 
-        day = local_time.timetuple().tm_yday
+        day = time.timetuple().tm_yday
 
         b = (360 / 365) * (day - 81)
 
-        tcf = 4 * (long - LSTM(lat = lat, long = long)) + 9.87*math.sin(math.radians(2*b)) - 7.53*math.cos(math.radians(b)) - 1.5*math.sin(math.radians(b))
+        tcf = 4 * (long - LSTM(lat = lat, long = long, time = time)) + 9.87*math.sin(math.radians(2*b)) - 7.53*math.cos(math.radians(b)) - 1.5*math.sin(math.radians(b))
 
         return(tcf)
 
 
-    def hour_angle(lat, long):
+    def hour_angle(lat, long, time):
         """
         Returns the hour angle for a particular longitude
         """
 
-        time_corrected = local_time + timedelta(hours = -12, minutes = time_correct_fact(lat = lat, long = long) / 60, seconds = 0)
+        time_corrected = time + timedelta(hours = -12, minutes = time_correct_fact(lat = lat, long = long, time = time) / 60, seconds = 0)
 
         hr_angle = 15 * (time_corrected.hour + time_corrected.minute / 60 + time_corrected.second / 3600)
         
@@ -84,11 +84,9 @@ def zenith_angle(lat, long):
     
     #------ function call begins ------#
     
-    local_time = get_local_time(lat = lat, long = long)
-
     ang_decl = metric_ang_decl()
 
-    elevation_angle = math.asin(math.sin(math.radians(ang_decl)) * math.sin(math.radians(lat)) + math.cos(math.radians(ang_decl)) * math.cos(math.radians(lat)) * math.cos(math.radians(hour_angle(lat = lat, long = long))))
+    elevation_angle = math.asin(math.sin(math.radians(ang_decl)) * math.sin(math.radians(lat)) + math.cos(math.radians(ang_decl)) * math.cos(math.radians(lat)) * math.cos(math.radians(hour_angle(lat = lat, long = long, time = time))))
 
     # convert from elevation angle to zenith angle
     zenith_angle = (math.pi / 2) - elevation_angle
