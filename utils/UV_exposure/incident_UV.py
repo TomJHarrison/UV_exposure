@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 from tzwhere import tzwhere
 
 
-def get_local_time(lat, long):
+def get_times(lat, long, time = None):
     """
-    Returns the current local time for a given location.
+    A function to return the local time and the utc time. If the user does not enter a time then the function finds the current local time and the current utc time. If the user enter s atime, then the function returns that time and calculates what the UTC time would be, given the specified time for a particular location.
     """
     
     # find timezone name
@@ -17,21 +17,40 @@ def get_local_time(lat, long):
         warnings.simplefilter("ignore")
         timezone_str = tzwhere.tzwhere().tzNameAt(lat, long)
 
-    # find time difference of timezone compare to UTC
+    # find time difference between timezone and UTC
     timezone = pytz.timezone(timezone_str)
-
     utc_offset = timezone.utcoffset(datetime.utcnow())
 
-    # subtract time difference from UTC
-    local_time = datetime.utcnow() + timedelta(days = utc_offset.days,
-                                               seconds = utc_offset.seconds) 
+    if time is None:
+        utc_time = datetime.utcnow()
+        # add time difference to UTC time
+        local_time = utc_time + timedelta(days = utc_offset.days,
+                                          seconds = utc_offset.seconds) 
+        return(local_time, utc_time)
 
-    return(local_time) 
+    else:
+        # subtract time difference from UTC
+        utc_time = time - timedelta(days = utc_offset.days,
+                                    seconds = utc_offset.seconds)
+        return(time, utc_time)
 
 
-def zenith_angle(lat, long, time):
+
+def zenith_angle(lat, long, local_time, utc_time):
+    """
+    Finds the solar zenith angle for a given location and time. The zenith angle is the angle between a line from a location on the Earth's surface to the Sun, and a line which points perpendicularly outwards from that location on Earth. Therefore, a zenith angle of 0 indicates that the Sun is directly overhead.
     
-    def metric_ang_decl():
+    Parameters:
+        lat (float): latitude coordinate of the given location
+        long (float): longitude coordinate of the given location
+        time (datetime): the time of day
+    
+    Returns:
+        zenith_angle (float): the solar zenith angle in radians
+    """
+    
+    
+    def metric_ang_decl(utc_time):
         """
         Returns the declination angle of the Earth in degrees.
 
@@ -42,40 +61,40 @@ def zenith_angle(lat, long, time):
             ang_decl (float): the angle of declination of the Earth in degrees
         """
 
-        day = datetime.utcnow().timetuple().tm_yday
+        day = utc_time.timetuple().tm_yday
         return(-23.45 * math.cos(math.radians((360 / 365) * (day + 10))))
     
     
-    def LSTM(lat, long, time):
+    def LSTM(lat, long, local_time, utc_time):
         """
         Returns the Local Standard Time Meridian
         """
 
-        delta_utc =  time.hour - datetime.utcnow().hour
+        delta_utc =  local_time.hour - utc_time.hour
         
         return(15 * delta_utc)
 
 
-    def time_correct_fact(lat, long, time):
+    def time_correct_fact(lat, long, local_time, utc_time):
         """
         Returns the time correction factor for a particular longitude
         """
 
-        day = time.timetuple().tm_yday
+        day = local_time.timetuple().tm_yday
 
         b = (360 / 365) * (day - 81)
 
-        tcf = 4 * (long - LSTM(lat = lat, long = long, time = time)) + 9.87*math.sin(math.radians(2*b)) - 7.53*math.cos(math.radians(b)) - 1.5*math.sin(math.radians(b))
+        tcf = 4 * (long - LSTM(lat = lat, long = long, local_time = local_time, utc_time = utc_time)) + 9.87*math.sin(math.radians(2*b)) - 7.53*math.cos(math.radians(b)) - 1.5*math.sin(math.radians(b))
 
         return(tcf)
 
 
-    def hour_angle(lat, long, time):
+    def hour_angle(lat, long, local_time, utc_time):
         """
         Returns the hour angle for a particular longitude
         """
 
-        time_corrected = time + timedelta(hours = -12, minutes = time_correct_fact(lat = lat, long = long, time = time) / 60, seconds = 0)
+        time_corrected = local_time + timedelta(hours = -12, minutes = time_correct_fact(lat = lat, long = long, local_time = local_time, utc_time = utc_time) / 60, seconds = 0)
 
         hr_angle = 15 * (time_corrected.hour + time_corrected.minute / 60 + time_corrected.second / 3600)
         
@@ -84,9 +103,9 @@ def zenith_angle(lat, long, time):
     
     #------ function call begins ------#
     
-    ang_decl = metric_ang_decl()
+    ang_decl = metric_ang_decl(utc_time = utc_time)
 
-    elevation_angle = math.asin(math.sin(math.radians(ang_decl)) * math.sin(math.radians(lat)) + math.cos(math.radians(ang_decl)) * math.cos(math.radians(lat)) * math.cos(math.radians(hour_angle(lat = lat, long = long, time = time))))
+    elevation_angle = math.asin(math.sin(math.radians(ang_decl)) * math.sin(math.radians(lat)) + math.cos(math.radians(ang_decl)) * math.cos(math.radians(lat)) * math.cos(math.radians(hour_angle(lat = lat, long = long, local_time = local_time, utc_time = utc_time))))
 
     # convert from elevation angle to zenith angle
     zenith_angle = (math.pi / 2) - elevation_angle
@@ -121,6 +140,7 @@ def UVA(utc_day, zenith):
     
     UVA = pow((1 / earth_sun_dist(utc_day)), 2) * 1.24 * mu * math.exp(- (0.58 / mu))
     return(UVA)
+
 
 def clear_sky_UVI(utc_day, zenith, tot_ozone):
     """
