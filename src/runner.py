@@ -38,9 +38,10 @@ def runner(lat, long, location, local_time, utc_time):
                                               zenith = zenith, 
                                               tot_ozone = ozone_thickness)
 
-    print('\nThe clear-sky UV index in {} on {} at {} is {}.\n'.format(location, time.strftime("%d/%m/%Y"), time.strftime("%H:%M"), round(clear_sky_UVI, 2)))
+    print('\nThe clear-sky UV index in {} on {} at {} is {}.\n'.format(location, local_time.strftime("%d/%m/%Y"), local_time.strftime("%H:%M"), round(clear_sky_UVI, 2)))
     
-    return(0)
+    return 0
+
 
 
 if __name__ == "__main__":
@@ -52,8 +53,6 @@ if __name__ == "__main__":
     location_full = geolocator.geocode(location)
     lat, long = location_full.latitude, location_full.longitude
 
-    print(lat, long)
-    
     print('If you want the current UV index for {}, type "Now", otherwise type the date and time that you would like the UV index for. Date and time must be in the format "day/month/year hour:minute."'.format(location))
     time = input()
 
@@ -66,7 +65,6 @@ if __name__ == "__main__":
         time = datetime.strptime(time, '%d/%m/%y %H:%M')
         local_time, utc_time = incident_UV.get_times(lat = lat, long = long, time = time)
 
- 
     # Call the runner
     runner(lat = lat, 
            long = long, 
