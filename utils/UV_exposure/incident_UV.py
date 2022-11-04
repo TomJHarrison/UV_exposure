@@ -32,7 +32,7 @@ def get_times(lat, long, time = None):
         # subtract time difference from UTC
         utc_time = time - timedelta(days = utc_offset.days,
                                     seconds = utc_offset.seconds)
-        return(time, utc_time)
+        return time, utc_time
 
 
 
@@ -62,7 +62,7 @@ def zenith_angle(lat, long, local_time, utc_time):
         """
 
         day = utc_time.timetuple().tm_yday
-        return(-23.45 * math.cos(math.radians((360 / 365) * (day + 10))))
+        return -23.45 * math.cos(math.radians((360 / 365) * (day + 10)))
     
     
     def LSTM(lat, long, local_time, utc_time):
@@ -72,7 +72,7 @@ def zenith_angle(lat, long, local_time, utc_time):
 
         delta_utc =  local_time.hour - utc_time.hour
         
-        return(15 * delta_utc)
+        return 15 * delta_utc
 
 
     def time_correct_fact(lat, long, local_time, utc_time):
@@ -86,7 +86,7 @@ def zenith_angle(lat, long, local_time, utc_time):
 
         tcf = 4 * (long - LSTM(lat = lat, long = long, local_time = local_time, utc_time = utc_time)) + 9.87*math.sin(math.radians(2*b)) - 7.53*math.cos(math.radians(b)) - 1.5*math.sin(math.radians(b))
 
-        return(tcf)
+        return tcf 
 
 
     def hour_angle(lat, long, local_time, utc_time):
@@ -98,7 +98,7 @@ def zenith_angle(lat, long, local_time, utc_time):
 
         hr_angle = 15 * (time_corrected.hour + time_corrected.minute / 60 + time_corrected.second / 3600)
         
-        return(hr_angle)
+        return hr_angle
     
     
     #------ function call begins ------#
@@ -109,24 +109,7 @@ def zenith_angle(lat, long, local_time, utc_time):
 
     # convert from elevation angle to zenith angle
     zenith_angle = (math.pi / 2) - elevation_angle
-    return(zenith_angle)
-
-
-def mu_x(zenith_angle):
-    """
-    A parameter of the UVI equation which depends on the solar zenith angle only
-    """
-    
-    return(math.cos(zenith_angle) * 0.83 + 0.17)
-
-
-def earth_sun_dist(utc_day):
-    """
-    A measure of the current Earth-Sun distance in astronomical units.
-    1 AU is equal to the average distance between the Sun and the Earth.
-    """
-
-    return(1 - 0.01672 * math.cos(0.9856 * (utc_day - 4)))
+    return zenith_angle
  
     
 def UVA(utc_day, zenith):
@@ -136,10 +119,12 @@ def UVA(utc_day, zenith):
     for this equation and for UVI (see below). Having zentih as an argument avoids calculating the 
     zenith angle twice and at two separate (albeit close) times.
     """
-    mu = mu_x(zenith)
     
-    UVA = pow((1 / earth_sun_dist(utc_day)), 2) * 1.24 * mu * math.exp(- (0.58 / mu))
-    return(UVA)
+    mu = math.cos(zenith) * 0.83 + 0.17
+    earth_sun_dist = 1 - 0.01672 * math.cos(0.9856 * (utc_day - 4))
+    
+    UVA = pow((1 / earth_sun_dist), 2) * 1.24 * mu * math.exp(- (0.58 / mu))
+    return UVA
 
 
 def clear_sky_UVI(utc_day, zenith, tot_ozone):
@@ -148,11 +133,13 @@ def clear_sky_UVI(utc_day, zenith, tot_ozone):
     """
     
     UVA_ = UVA(utc_day, zenith)
+
     X = 1000 * math.cos(zenith) / tot_ozone
-    UVI = UVA_ * (2 * pow(X, 1.62)) + 280 / tot_ozone + 1.4
+    
+    UVI = UVA_ * (2 * pow(X, 1.62) + 280 / tot_ozone + 1.4)
     
     if isinstance(UVI, complex) or UVI < 0:
         UVI = 0
         
-    return(UVI)
+    return UVI
     

@@ -49,7 +49,7 @@ def clean_ozone_data(date):
     clean_filepath = "./data/ozone_data_clean_" + str(date.year) + str(date.month) + str(date.day) + ".txt"
     
     if exists(clean_filepath):
-        return(pd.read_csv(clean_filepath, sep = ' '))
+        return pd.read_csv(clean_filepath, sep = ' ')
     
     else: 
         # Read in ozone data
@@ -77,11 +77,11 @@ def clean_ozone_data(date):
         # Write output to a text file
         df_out.to_csv(clean_filepath, header = True, sep = ' ', index = False)
 
-        return(df_out)
+        return df_out
 
 
 def get_ozone_thickness(df_ozone, lat, long):
     lat_rounded = math.floor(lat) + 0.5
     long_rounded = math.floor(long) + 0.5
     
-    return(int(df_ozone.loc[(df_ozone['Latitude'] == lat_rounded) & (df_ozone['Longitude'] == long_rounded)]['ozone_dobson_value']))
+    return int(df_ozone.loc[(df_ozone['Latitude'] == lat_rounded) & (df_ozone['Longitude'] == long_rounded)]['ozone_dobson_value'])
