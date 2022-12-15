@@ -20,11 +20,11 @@ def get_ozone_data(date):
     # Find current datetime for UTC
     # date = datetime.utcnow() - timedelta(days=1) 
     end_filepath = "./data/ozone_data_raw_" + str(date.year) + str(date.month) + str(date.day) + ".txt"
-    
+
     # Check whether ozone data file already exists
     if not exists(end_filepath):
         # Extract all links on the url webpage. This page contains links to text files containing global ozone data
-        url = "https://ozonewatch.gsfc.nasa.gov/data/omps/Y2022/"
+        url = "https://ozonewatch.gsfc.nasa.gov/data/omps/Y" + str(date.year) + "/"
         reqs = requests.get(url)
         links = BeautifulSoup(reqs.text, 'html.parser')
 

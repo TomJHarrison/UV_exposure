@@ -4,6 +4,7 @@ os.chdir('/Users/tomharrison/Documents/Projects/UV_exposure')
 
 
 # import relevant packages
+import constants # a file where API keys are stored
 import math
 import pandas as pd
 import warnings
@@ -14,7 +15,10 @@ from utils.UV_exposure import *
 
 
 
-def runner(lat, long, location, local_time, utc_time):
+def runner(lat, long, location, time):
+    # Find current local time and the corresponding UTC time
+    local_time, utc_time = incident_UV.get_times(lat = lat, long = long, time = time)
+    
     # Find the current UTC datetime. We will use it for extracting ozone data, calculating the Earth-Sun distance, and more
     day_of_year = utc_time.timetuple().tm_yday
     
@@ -23,22 +27,31 @@ def runner(lat, long, location, local_time, utc_time):
     ozone.get_ozone_data(utc_time - timedelta(days=1))
     df_ozone = ozone.clean_ozone_data(utc_time - timedelta(days=1))
     
+    # Find the thickness of the ozone layer at the location of interest
     ozone_thickness = ozone.get_ozone_thickness(df_ozone = df_ozone, 
                                                 lat = lat, 
                                                 long = long)
     
+    # Find the solar zenith angle at the location and time given
     zenith = incident_UV.zenith_angle(lat = lat, 
                                       long = long, 
                                       local_time = local_time, 
                                       utc_time = utc_time)
 
-    UVA = incident_UV.UVA(utc_day = day_of_year, 
-                          zenith = zenith)
+    # Find the cleay-sky UV index at the specified location and time
     clear_sky_UVI = incident_UV.clear_sky_UVI(utc_day = day_of_year, 
                                               zenith = zenith, 
                                               tot_ozone = ozone_thickness)
 
-    print('\nThe clear-sky UV index in {} on {} at {} is {}.\n'.format(location, local_time.strftime("%d/%m/%Y"), local_time.strftime("%H:%M"), round(clear_sky_UVI, 2)))
+    # Find the cloud modification factor based on weather
+    cmf = cloud_cover.get_cloud_mod_factor(lat = lat, 
+                                           long = long, 
+                                           time = time, 
+                                           api_key = constants.weatherstack_api_key)
+    
+    real_UVI = cmf * clear_sky_UVI
+    
+    print('\nIn {} on {} at {}: \nClear-sky UV index = {} \nReal UV index = {}\n'.format(location, local_time.strftime("%d/%m/%Y"), local_time.strftime("%H:%M"), round(clear_sky_UVI, 2), round(real_UVI, 2)))
     
     return 0
 
@@ -57,20 +70,14 @@ if __name__ == "__main__":
     time = input()
 
     # If the user wants the current time, then find the local time of that location
-    if time.lower() == "now":
-        local_time, utc_time = incident_UV.get_times(lat = lat, long = long)
-    
     # Otherwise convert the time into a date format
+    if time.lower() == "now":
+        time = None
     else:
         time = datetime.strptime(time, '%d/%m/%y %H:%M')
-        local_time, utc_time = incident_UV.get_times(lat = lat, long = long, time = time)
 
     # Call the runner
     runner(lat = lat, 
            long = long, 
            location = location, 
-           local_time = local_time, 
-           utc_time = utc_time)
-
-
-  
+           time = time)
