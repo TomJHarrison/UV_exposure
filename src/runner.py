@@ -27,10 +27,13 @@ def runner(args):
     # Find the current UTC datetime. We will use it for extracting ozone data, calculating the Earth-Sun distance, and more
     day_of_year = utc_time.timetuple().tm_yday
     
-    # Get yesterday's ozone data and clean it
-    # Today's data does not always exist yet
-    ozone.get_ozone_data(utc_time - timedelta(days=1))
-    df_ozone = ozone.clean_ozone_data(utc_time - timedelta(days=1))
+    # NASA website takes ~2 days to update. Therefore we find the ozone data for 2 days prior to the current date
+    if args.current:
+        ozone.get_ozone_data(utc_time - timedelta(days=2))
+        df_ozone = ozone.clean_ozone_data(utc_time - timedelta(days=2))
+    elif args.time:
+        ozone.get_ozone_data(utc_time)
+        df_ozone = ozone.clean_ozone_data(utc_time)
     
     # Find the thickness of the ozone layer at the location of interest
     ozone_thickness = ozone.get_ozone_thickness(df_ozone = df_ozone, 
@@ -58,8 +61,8 @@ def runner(args):
     
         real_UVI = cmf * clear_sky_UVI
         print('Real UV Index = {}\n'.format(round(real_UVI, 2)))
-    elif args.time and not args.current:
-        warnings.warn("There is currently no support for historical weather data.")
+    elif args.time:
+        warnings.warn("There is currently no support for historical weather data, so the real UV index cannot be calculated.")
     
     return 0
 
