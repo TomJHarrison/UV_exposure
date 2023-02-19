@@ -19,14 +19,14 @@ def parse_args():
     parser.add_argument(
         "-curr",
         "--current",
-        help="Whether the current UV index should be returned.",
+        help="Whether the current UV index should be returned. (OPTIONAL: Either --current or --time must be specified, but not both.)",
         required=False,
         action="store_true"
     )
     
     parser.add_argument(
         "-time",
-        help="The time for which the UV index should be calculated. Should be in the format HH:MM.",
+        help="The time for which the UV index should be calculated. Should be in the format HH:MM. (OPTIONAL: Either --current or --time must be specified, but not both.)",
         required=False,
         type=str
     )
@@ -34,7 +34,7 @@ def parse_args():
     parser.add_argument(
         "-start",
         "--start_time",
-        help="The starting datetime for calculating UV dosage for a period. Should be in the format dd/mm/yy HH:MM.",
+        help="The starting datetime for calculating UV dosage for a period. Should be in the format dd/mm/yy HH:MM. (OPTIONAL)",
         type=str,
         required=False
     )
@@ -42,25 +42,25 @@ def parse_args():
     parser.add_argument(
         "-end",
         "--end_time",
-        help="The end datetime for calculating UV dosage for a period. Should be in the format dd/mm/yy HH:MM.",
+        help="The end datetime for calculating UV dosage for a period. Should be in the format dd/mm/yy HH:MM. (OPTIONAL)",
         type=str,
         required=False
     )
     
-    parser.add_argument(
-        "-lat",
-        "--latitude",
-        help="The latitude of the location.",
-        type=float,
-        required=False
-    )
+#     parser.add_argument(
+#         "-lat",
+#         "--latitude",
+#         help="The latitude of the location.",
+#         type=float,
+#         required=False
+#     )
     
-    parser.add_argument(
-        "-long",
-        "--longitude",
-        help="The longitude of the location.",
-        type=float,
-        required=False
-    )
+#     parser.add_argument(
+#         "-long",
+#         "--longitude",
+#         help="The longitude of the location.",
+#         type=float,
+#         required=False
+#     )
     
     return parser.parse_args()
