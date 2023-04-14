@@ -7,9 +7,11 @@ os.chdir('/Users/tomharrison/Documents/Projects/UV_exposure')
 import constants # a file where API keys are stored
 import math
 import pandas as pd
+import pytz
+import time
 import warnings
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from geopy.geocoders import Nominatim
 from src import parse_args
 from utils.UV_exposure import *
@@ -17,13 +19,18 @@ from utils.UV_exposure import get_times
 
 
 def runner(args):
-    # Find current local time and the corresponding UTC time
+    # Find local time and the corresponding UTC time
     args.time, utc_time = get_times(
         lat = args.latitude,
         long = args.longitude,
         time = args.time
     )
     
+    time_ = args.time
+    
+    if time.daylight:
+        args.time = args.time - timedelta(hours = 1)
+
     # Find the current UTC datetime. We will use it for extracting ozone data, calculating the Earth-Sun distance, and more
     day_of_year = utc_time.timetuple().tm_yday
     
@@ -32,32 +39,45 @@ def runner(args):
         ozone.get_ozone_data(utc_time - timedelta(days=2))
         df_ozone = ozone.clean_ozone_data(utc_time - timedelta(days=2))
     elif args.time:
+        utc = pytz.UTC
+        if utc.localize(args.time - timedelta(days=2)) > datetime.now(timezone.utc):
+            warnings.warn("It is not possible to use future ozone forecasts so the most recent ozone data is being used.")
+            utc_time = datetime.now(timezone.utc) - timedelta(days=3)
+        
         ozone.get_ozone_data(utc_time)
         df_ozone = ozone.clean_ozone_data(utc_time)
     
     # Find the thickness of the ozone layer at the location of interest
-    ozone_thickness = ozone.get_ozone_thickness(df_ozone = df_ozone, 
-                                                lat = args.latitude, 
-                                                long = args.longitude)
+    ozone_thickness = ozone.get_ozone_thickness(
+        df_ozone = df_ozone, 
+        lat = args.latitude, 
+        long = args.longitude
+    )
     
     # Find the solar zenith angle at the location and time given
-    zenith = incident_UV.zenith_angle(lat = args.latitude, 
-                                      long = args.longitude, 
-                                      local_time = args.time, 
-                                      utc_time = utc_time)
+    zenith = incident_UV.zenith_angle(
+        lat = args.latitude, 
+        long = args.longitude, 
+        local_time = args.time, 
+        utc_time = utc_time
+    )
 
     # Find the cleay-sky UV index at the specified location and time
-    clear_sky_UVI = incident_UV.clear_sky_UVI(utc_day = day_of_year, 
-                                              zenith = zenith, 
-                                              tot_ozone = ozone_thickness)
+    clear_sky_UVI = incident_UV.clear_sky_UVI(
+        utc_day = day_of_year, 
+        zenith = zenith, 
+        tot_ozone = ozone_thickness
+    )
 
-    print('\nIn {} on {} at {}: \nClear-sky UV index = {}'.format(args.location, args.time.strftime("%d/%m/%Y"), args.time.strftime("%H:%M"), round(clear_sky_UVI, 2)))
+    print('\nIn {} on {} at {}: \nClear-sky UV index = {}\n'.format(args.location, time_.strftime("%d/%m/%Y"), time_.strftime("%H:%M"), round(clear_sky_UVI, 2)))
     
     if args.current:
         # Find the cloud modification factor based on weather
-        cmf = cloud_cover.get_cloud_mod_factor(lat = args.latitude, 
-                                               long = args.longitude,
-                                               api_key = constants.weatherstack_api_key)
+        cmf = cloud_cover.get_cloud_mod_factor(
+            lat = args.latitude, 
+            long = args.longitude,
+            api_key = constants.weatherstack_api_key
+        )
     
         real_UVI = cmf * clear_sky_UVI
         print('Real UV Index = {}\n'.format(round(real_UVI, 2)))

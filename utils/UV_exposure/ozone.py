@@ -4,11 +4,13 @@ import os
 import pandas as pd
 import pytz
 import requests
+import warnings
 
-from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
-from tzwhere import tzwhere
+from datetime import datetime, timedelta
 from os.path import exists
+from tzwhere import tzwhere
+
 from .incident_UV import zenith_angle 
 
 
@@ -30,11 +32,15 @@ def get_ozone_data(date):
 
         # Combine year, month and day into a format that we expect to be in the relevant text file link
         date_suffix = '{:04d}'.format(date.year) + 'm' + '{:02d}'.format(date.month) + '{:02d}'.format(date.day)
-
+        
         # Find text file link
         txt_file_suffix = [link.get('href') for link in links.find_all('a') if date_suffix in link.get('href')]
-        file_url = url + txt_file_suffix[0]
-
+        
+        try:
+            file_url = url + txt_file_suffix[0]
+        except IndexError:
+            raise Exception("Cannot get ozone data for the specified date. Try an earlier date. Note that NASA take 2 days to release ozone data.")
+            
         r = requests.get(file_url, allow_redirects=True)
         
         open(f'{end_filepath}', 'wb').write(r.content)
