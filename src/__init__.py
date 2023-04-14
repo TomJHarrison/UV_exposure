@@ -26,7 +26,7 @@ def parse_args():
     
     parser.add_argument(
         "-time",
-        help="The time for which the UV index should be calculated. Should be in the format HH:MM. (OPTIONAL: Either --current or --time must be specified, but not both.)",
+        help="The time for which the UV index should be calculated. Should be in the format dd/mm/yy HH:MM. (OPTIONAL: Either --current or --time must be specified, but not both.)",
         required=False,
         type=str
     )
